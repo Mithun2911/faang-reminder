@@ -1,0 +1,975 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>FAANG Reminder — Control Panel</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Bricolage+Grotesque:wght@400;600;700;800&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #f5f0e8;
+    --surface: #ede8df;
+    --card: #ffffff;
+    --border: #d8d0c4;
+    --ink: #1a1714;
+    --ink2: #5a534d;
+    --ink3: #9a9088;
+    --green: #1a6b3c;
+    --green-bg: #e8f5ee;
+    --red: #b03020;
+    --red-bg: #fdf0ee;
+    --amber: #8a5a00;
+    --amber-bg: #fdf5e0;
+    --blue: #1a4080;
+    --blue-bg: #e8eef8;
+    --accent: #c84b1a;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    background: var(--bg);
+    color: var(--ink);
+    font-family: 'Bricolage Grotesque', sans-serif;
+    min-height: 100vh;
+    padding: 0;
+  }
+
+  /* Grain overlay */
+  body::after {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='0.04'/%3E%3C/svg%3E");
+    pointer-events: none;
+    z-index: 999;
+    opacity: 0.4;
+  }
+
+  .page {
+    max-width: 680px;
+    margin: 0 auto;
+    padding: 48px 24px 80px;
+  }
+
+  /* HEADER */
+  header {
+    margin-bottom: 40px;
+    animation: slideIn 0.5s ease;
+  }
+
+  .eyebrow {
+    font-family: 'DM Mono', monospace;
+    font-size: 11px;
+    letter-spacing: 0.15em;
+    color: var(--accent);
+    text-transform: uppercase;
+    margin-bottom: 8px;
+  }
+
+  h1 {
+    font-size: clamp(2rem, 5vw, 3rem);
+    font-weight: 800;
+    line-height: 1.05;
+    letter-spacing: -0.04em;
+    color: var(--ink);
+  }
+
+  h1 em {
+    font-style: normal;
+    color: var(--accent);
+  }
+
+  .subtitle {
+    margin-top: 10px;
+    font-family: 'DM Mono', monospace;
+    font-size: 12px;
+    color: var(--ink3);
+    letter-spacing: 0.04em;
+  }
+
+  /* SETUP BANNER */
+  .setup-banner {
+    background: var(--amber-bg);
+    border: 1.5px solid #e8c860;
+    border-radius: 12px;
+    padding: 16px 20px;
+    margin-bottom: 28px;
+    font-size: 13px;
+    color: var(--amber);
+    font-family: 'DM Mono', monospace;
+    line-height: 1.6;
+    display: none;
+  }
+
+  .setup-banner.show { display: block; }
+  .setup-banner strong { font-weight: 700; display: block; margin-bottom: 4px; }
+
+  /* CONNECT SECTION */
+  .connect-card {
+    background: var(--card);
+    border: 1.5px solid var(--border);
+    border-radius: 16px;
+    padding: 24px;
+    margin-bottom: 24px;
+    animation: slideIn 0.5s ease 0.05s both;
+    box-shadow: 0 2px 12px rgba(0,0,0,0.06);
+  }
+
+  .connect-card h2 {
+    font-size: 13px;
+    font-weight: 700;
+    font-family: 'DM Mono', monospace;
+    letter-spacing: 0.08em;
+    color: var(--ink3);
+    text-transform: uppercase;
+    margin-bottom: 16px;
+  }
+
+  .input-row {
+    display: flex;
+    gap: 10px;
+    flex-wrap: wrap;
+  }
+
+  .input-group {
+    flex: 1;
+    min-width: 180px;
+  }
+
+  .input-group label {
+    display: block;
+    font-size: 11px;
+    font-family: 'DM Mono', monospace;
+    color: var(--ink3);
+    letter-spacing: 0.08em;
+    margin-bottom: 6px;
+    text-transform: uppercase;
+  }
+
+  .input-group input {
+    width: 100%;
+    background: var(--surface);
+    border: 1.5px solid var(--border);
+    border-radius: 8px;
+    color: var(--ink);
+    font-family: 'DM Mono', monospace;
+    font-size: 13px;
+    padding: 10px 12px;
+    outline: none;
+    transition: border-color 0.2s;
+  }
+
+  .input-group input:focus { border-color: var(--accent); }
+  .input-group input::placeholder { color: var(--ink3); }
+
+  .connect-btn {
+    background: var(--ink);
+    color: var(--bg);
+    border: none;
+    border-radius: 8px;
+    font-family: 'Bricolage Grotesque', sans-serif;
+    font-weight: 700;
+    font-size: 13px;
+    padding: 10px 20px;
+    cursor: pointer;
+    transition: all 0.2s;
+    align-self: flex-end;
+    white-space: nowrap;
+  }
+
+  .connect-btn:hover { background: var(--accent); transform: translateY(-1px); }
+
+  .connected-status {
+    display: none;
+    align-items: center;
+    gap: 8px;
+    font-family: 'DM Mono', monospace;
+    font-size: 12px;
+    color: var(--green);
+    margin-top: 12px;
+  }
+
+  .connected-status.show { display: flex; }
+
+  .dot {
+    width: 8px; height: 8px;
+    border-radius: 50%;
+    background: var(--green);
+    animation: pulse 2s infinite;
+  }
+
+  /* STATUS CARD */
+  .status-card {
+    background: var(--card);
+    border: 1.5px solid var(--border);
+    border-radius: 16px;
+    padding: 24px;
+    margin-bottom: 24px;
+    animation: slideIn 0.5s ease 0.1s both;
+    box-shadow: 0 2px 12px rgba(0,0,0,0.06);
+  }
+
+  .status-card h2 {
+    font-size: 13px;
+    font-weight: 700;
+    font-family: 'DM Mono', monospace;
+    letter-spacing: 0.08em;
+    color: var(--ink3);
+    text-transform: uppercase;
+    margin-bottom: 20px;
+  }
+
+  .status-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 12px;
+    margin-bottom: 20px;
+  }
+
+  .stat-box {
+    background: var(--surface);
+    border-radius: 10px;
+    padding: 14px 16px;
+    border: 1px solid var(--border);
+  }
+
+  .stat-box .stat-label {
+    font-family: 'DM Mono', monospace;
+    font-size: 10px;
+    letter-spacing: 0.1em;
+    color: var(--ink3);
+    text-transform: uppercase;
+    margin-bottom: 4px;
+  }
+
+  .stat-box .stat-value {
+    font-size: 22px;
+    font-weight: 800;
+    color: var(--ink);
+    letter-spacing: -0.03em;
+  }
+
+  .stat-box .stat-sub {
+    font-size: 11px;
+    font-family: 'DM Mono', monospace;
+    color: var(--ink3);
+    margin-top: 2px;
+  }
+
+  /* STATUS BADGE */
+  .status-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 5px 12px;
+    border-radius: 99px;
+    font-family: 'DM Mono', monospace;
+    font-size: 11px;
+    font-weight: 500;
+    letter-spacing: 0.06em;
+  }
+
+  .status-badge.active { background: var(--green-bg); color: var(--green); }
+  .status-badge.paused { background: var(--amber-bg); color: var(--amber); }
+  .status-badge.dot-green::before { content:''; width:6px;height:6px;border-radius:50%;background:var(--green); }
+  .status-badge.dot-amber::before { content:''; width:6px;height:6px;border-radius:50%;background:#e8a800; }
+
+  /* PROGRESS BAR */
+  .prog-wrap { margin-top: 16px; }
+  .prog-label {
+    display: flex;
+    justify-content: space-between;
+    font-family: 'DM Mono', monospace;
+    font-size: 11px;
+    color: var(--ink3);
+    margin-bottom: 6px;
+  }
+
+  .prog-track {
+    height: 8px;
+    background: var(--surface);
+    border-radius: 99px;
+    overflow: hidden;
+    border: 1px solid var(--border);
+  }
+
+  .prog-fill {
+    height: 100%;
+    background: linear-gradient(90deg, var(--accent), #e87040);
+    border-radius: 99px;
+    transition: width 0.8s cubic-bezier(0.34,1.56,0.64,1);
+  }
+
+  /* CONTROLS */
+  .controls-card {
+    background: var(--card);
+    border: 1.5px solid var(--border);
+    border-radius: 16px;
+    padding: 24px;
+    margin-bottom: 24px;
+    animation: slideIn 0.5s ease 0.15s both;
+    box-shadow: 0 2px 12px rgba(0,0,0,0.06);
+  }
+
+  .controls-card h2 {
+    font-size: 13px;
+    font-weight: 700;
+    font-family: 'DM Mono', monospace;
+    letter-spacing: 0.08em;
+    color: var(--ink3);
+    text-transform: uppercase;
+    margin-bottom: 20px;
+  }
+
+  .control-row {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+  }
+
+  .control-item {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 14px 16px;
+    background: var(--surface);
+    border-radius: 10px;
+    border: 1.5px solid var(--border);
+    gap: 16px;
+    flex-wrap: wrap;
+  }
+
+  .control-item .ctrl-info {}
+  .control-item .ctrl-title {
+    font-size: 14px;
+    font-weight: 700;
+    color: var(--ink);
+    margin-bottom: 2px;
+  }
+
+  .control-item .ctrl-sub {
+    font-size: 12px;
+    font-family: 'DM Mono', monospace;
+    color: var(--ink3);
+  }
+
+  .ctrl-actions { display: flex; gap: 8px; flex-shrink: 0; align-items: center; }
+
+  /* BUTTONS */
+  .btn {
+    border: none;
+    border-radius: 8px;
+    font-family: 'Bricolage Grotesque', sans-serif;
+    font-weight: 700;
+    font-size: 13px;
+    padding: 9px 16px;
+    cursor: pointer;
+    transition: all 0.18s;
+    white-space: nowrap;
+  }
+
+  .btn:hover { transform: translateY(-1px); }
+  .btn:active { transform: translateY(0); }
+
+  .btn-green { background: var(--green-bg); color: var(--green); border: 1.5px solid #a8dfc0; }
+  .btn-green:hover { background: var(--green); color: white; }
+
+  .btn-red { background: var(--red-bg); color: var(--red); border: 1.5px solid #f0c0b8; }
+  .btn-red:hover { background: var(--red); color: white; }
+
+  .btn-blue { background: var(--blue-bg); color: var(--blue); border: 1.5px solid #b8c8e8; }
+  .btn-blue:hover { background: var(--blue); color: white; }
+
+  .btn-dark { background: var(--ink); color: var(--bg); border: 1.5px solid var(--ink); }
+  .btn-dark:hover { background: var(--accent); border-color: var(--accent); }
+
+  /* DAY STEPPER */
+  .day-stepper {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .stepper-btn {
+    width: 32px; height: 32px;
+    border-radius: 8px;
+    background: var(--card);
+    border: 1.5px solid var(--border);
+    color: var(--ink);
+    font-size: 16px;
+    cursor: pointer;
+    display: flex; align-items: center; justify-content: center;
+    transition: all 0.18s;
+    font-family: monospace;
+  }
+
+  .stepper-btn:hover { border-color: var(--accent); color: var(--accent); }
+
+  .day-input {
+    width: 60px;
+    text-align: center;
+    background: var(--card);
+    border: 1.5px solid var(--border);
+    border-radius: 8px;
+    color: var(--ink);
+    font-family: 'DM Mono', monospace;
+    font-size: 15px;
+    font-weight: 700;
+    padding: 6px 8px;
+    outline: none;
+  }
+
+  .day-input:focus { border-color: var(--accent); }
+
+  /* TIME INPUT */
+  .time-input {
+    background: var(--card);
+    border: 1.5px solid var(--border);
+    border-radius: 8px;
+    color: var(--ink);
+    font-family: 'DM Mono', monospace;
+    font-size: 14px;
+    padding: 7px 10px;
+    outline: none;
+    cursor: pointer;
+    width: 110px;
+  }
+
+  .time-input:focus { border-color: var(--accent); }
+
+  /* LOG */
+  .log-card {
+    background: var(--ink);
+    border-radius: 16px;
+    padding: 20px 24px;
+    margin-bottom: 24px;
+    animation: slideIn 0.5s ease 0.2s both;
+  }
+
+  .log-card h2 {
+    font-size: 11px;
+    font-weight: 700;
+    font-family: 'DM Mono', monospace;
+    letter-spacing: 0.12em;
+    color: #6b6b55;
+    text-transform: uppercase;
+    margin-bottom: 12px;
+  }
+
+  .log-entries {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    max-height: 150px;
+    overflow-y: auto;
+  }
+
+  .log-entry {
+    font-family: 'DM Mono', monospace;
+    font-size: 12px;
+    color: #b8b89a;
+    line-height: 1.5;
+  }
+
+  .log-entry.success { color: #6ec98a; }
+  .log-entry.error { color: #e07060; }
+  .log-entry.info { color: #7ab0e8; }
+
+  .log-entry .log-time {
+    color: #4a4a38;
+    margin-right: 8px;
+  }
+
+  /* TOAST */
+  .toast {
+    position: fixed;
+    bottom: 28px;
+    left: 50%;
+    transform: translateX(-50%) translateY(80px);
+    background: var(--ink);
+    color: var(--bg);
+    font-family: 'DM Mono', monospace;
+    font-size: 13px;
+    padding: 12px 24px;
+    border-radius: 99px;
+    z-index: 9999;
+    transition: transform 0.35s cubic-bezier(0.34,1.56,0.64,1);
+    white-space: nowrap;
+    box-shadow: 0 4px 24px rgba(0,0,0,0.2);
+  }
+
+  .toast.show { transform: translateX(-50%) translateY(0); }
+
+  /* LOADING OVERLAY */
+  .spinner {
+    display: inline-block;
+    width: 14px; height: 14px;
+    border: 2px solid currentColor;
+    border-top-color: transparent;
+    border-radius: 50%;
+    animation: spin 0.7s linear infinite;
+    vertical-align: middle;
+    margin-right: 6px;
+  }
+
+  @keyframes spin { to { transform: rotate(360deg); } }
+  @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:0.4} }
+  @keyframes slideIn {
+    from { opacity:0; transform: translateY(16px); }
+    to   { opacity:1; transform: translateY(0); }
+  }
+
+  /* Disabled state */
+  .controls-card.locked { opacity: 0.45; pointer-events: none; }
+
+  @media (max-width: 500px) {
+    .status-grid { grid-template-columns: 1fr 1fr; }
+    .control-item { flex-direction: column; align-items: flex-start; }
+  }
+</style>
+</head>
+<body>
+<div class="page">
+
+  <!-- HEADER -->
+  <header>
+    <div class="eyebrow">// Control Panel</div>
+    <h1>FAANG<br>Reminder <em>Hub</em></h1>
+    <p class="subtitle">Pause · Resume · Change Day · Set Time — all from here</p>
+  </header>
+
+  <!-- SETUP BANNER -->
+  <div class="setup-banner" id="setupBanner">
+    <strong>⚙️ First time? Connect your GitHub repo below.</strong>
+    You need a GitHub Personal Access Token with <code>repo</code> scope.<br>
+    Get it at: github.com → Settings → Developer settings → Personal access tokens → Tokens (classic)
+  </div>
+
+  <!-- CONNECT -->
+  <div class="connect-card">
+    <h2>GitHub Connection</h2>
+    <div class="input-row">
+      <div class="input-group">
+        <label>GitHub Username</label>
+        <input type="text" id="ghUser" placeholder="e.g. mithundev" />
+      </div>
+      <div class="input-group">
+        <label>Repository Name</label>
+        <input type="text" id="ghRepo" placeholder="faang-reminder" />
+      </div>
+      <div class="input-group" style="flex:2;min-width:220px;">
+        <label>Personal Access Token</label>
+        <input type="password" id="ghToken" placeholder="ghp_xxxxxxxxxxxxxxxxxxxx" />
+      </div>
+      <button class="connect-btn" onclick="connect()">Connect →</button>
+    </div>
+    <div class="connected-status" id="connectedStatus">
+      <span class="dot"></span>
+      Connected to <strong id="connectedRepo">—</strong>
+    </div>
+  </div>
+
+  <!-- STATUS -->
+  <div class="status-card">
+    <h2>Current Status</h2>
+    <div class="status-grid">
+      <div class="stat-box">
+        <div class="stat-label">Current Day</div>
+        <div class="stat-value" id="statDay">—</div>
+        <div class="stat-sub" id="statWeek">Connect to load</div>
+      </div>
+      <div class="stat-box">
+        <div class="stat-label">Days Remaining</div>
+        <div class="stat-value" id="statRemaining">—</div>
+        <div class="stat-sub">out of 87 total</div>
+      </div>
+      <div class="stat-box">
+        <div class="stat-label">Email Status</div>
+        <div class="stat-value" id="statStatus">—</div>
+        <div class="stat-sub" id="statStatusSub">—</div>
+      </div>
+      <div class="stat-box">
+        <div class="stat-label">Reminder Time</div>
+        <div class="stat-value" id="statTime" style="font-size:18px;">—</div>
+        <div class="stat-sub">IST daily</div>
+      </div>
+    </div>
+    <div class="prog-wrap">
+      <div class="prog-label">
+        <span>FAANG PREP PROGRESS</span>
+        <span id="progPct">0%</span>
+      </div>
+      <div class="prog-track"><div class="prog-fill" id="progFill" style="width:0%"></div></div>
+    </div>
+  </div>
+
+  <!-- CONTROLS -->
+  <div class="controls-card locked" id="controlsCard">
+    <h2>Controls</h2>
+    <div class="control-row">
+
+      <!-- PAUSE / RESUME -->
+      <div class="control-item">
+        <div class="ctrl-info">
+          <div class="ctrl-title">Pause / Resume Emails</div>
+          <div class="ctrl-sub" id="pauseSubtext">Emails are currently active</div>
+        </div>
+        <div class="ctrl-actions">
+          <button class="btn btn-red" id="pauseBtn" onclick="togglePause()">⏸ Pause</button>
+        </div>
+      </div>
+
+      <!-- CHANGE DAY -->
+      <div class="control-item">
+        <div class="ctrl-info">
+          <div class="ctrl-title">Jump to Day</div>
+          <div class="ctrl-sub">Skip ahead or go back to a missed day</div>
+        </div>
+        <div class="ctrl-actions">
+          <div class="day-stepper">
+            <button class="stepper-btn" onclick="stepDay(-1)">−</button>
+            <input type="number" class="day-input" id="dayInput" value="1" min="1" max="87">
+            <button class="stepper-btn" onclick="stepDay(1)">+</button>
+          </div>
+          <button class="btn btn-blue" onclick="saveDay()">Set Day</button>
+        </div>
+      </div>
+
+      <!-- CHANGE TIME -->
+      <div class="control-item">
+        <div class="ctrl-info">
+          <div class="ctrl-title">Change Reminder Time</div>
+          <div class="ctrl-sub">What time do you want the daily email? (IST)</div>
+        </div>
+        <div class="ctrl-actions">
+          <input type="time" class="time-input" id="timeInput" value="07:00">
+          <button class="btn btn-green" onclick="saveTime()">Save Time</button>
+        </div>
+      </div>
+
+      <!-- SEND NOW -->
+      <div class="control-item">
+        <div class="ctrl-info">
+          <div class="ctrl-title">Send Today's Email Now</div>
+          <div class="ctrl-sub">Trigger manually — useful for testing</div>
+        </div>
+        <div class="ctrl-actions">
+          <button class="btn btn-dark" onclick="triggerNow()">▶ Send Now</button>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- LOG -->
+  <div class="log-card">
+    <h2>// Activity Log</h2>
+    <div class="log-entries" id="logEntries">
+      <div class="log-entry info"><span class="log-time">—</span>Waiting for connection...</div>
+    </div>
+  </div>
+
+</div>
+
+<!-- TOAST -->
+<div class="toast" id="toast"></div>
+
+<script>
+// ── STATE ──────────────────────────────────────────────────────────────────
+
+let GH = {
+  user: localStorage.getItem('gh_user') || '',
+  repo: localStorage.getItem('gh_repo') || '',
+  token: localStorage.getItem('gh_token') || '',
+};
+
+let config = null;
+let configSha = null;
+
+const WEEK_TOPICS = {
+  1:"Arrays — Basics",2:"Arrays II",3:"Strings",4:"Sorting & Searching",
+  5:"Linked Lists",6:"Stacks & Queues",7:"Trees & BSTs",8:"Adv Trees & Trie",
+  9:"Heaps",10:"Graphs I",11:"Graphs II",12:"DP I",13:"DP II"
+};
+
+// ── INIT ──────────────────────────────────────────────────────────────────
+
+window.onload = () => {
+  if (GH.user) {
+    document.getElementById('ghUser').value = GH.user;
+    document.getElementById('ghRepo').value = GH.repo;
+    document.getElementById('ghToken').value = GH.token;
+    if (GH.user && GH.repo && GH.token) connect(true);
+  } else {
+    document.getElementById('setupBanner').classList.add('show');
+  }
+};
+
+// ── GITHUB API ─────────────────────────────────────────────────────────────
+
+async function ghGet(path) {
+  const res = await fetch(`https://api.github.com/repos/${GH.user}/${GH.repo}/contents/${path}`, {
+    headers: { Authorization: `token ${GH.token}`, Accept: 'application/vnd.github.v3+json' }
+  });
+  if (!res.ok) throw new Error(`GitHub ${res.status}: ${res.statusText}`);
+  return res.json();
+}
+
+async function ghPut(path, content, sha, message) {
+  const res = await fetch(`https://api.github.com/repos/${GH.user}/${GH.repo}/contents/${path}`, {
+    method: 'PUT',
+    headers: {
+      Authorization: `token ${GH.token}`,
+      Accept: 'application/vnd.github.v3+json',
+      'Content-Type': 'application/json'
+    },
+    body: JSON.stringify({
+      message,
+      content: btoa(unescape(encodeURIComponent(JSON.stringify(content, null, 2)))),
+      sha
+    })
+  });
+  if (!res.ok) throw new Error(`GitHub ${res.status}: ${res.statusText}`);
+  return res.json();
+}
+
+async function ghDispatch() {
+  const res = await fetch(`https://api.github.com/repos/${GH.user}/${GH.repo}/actions/workflows/daily_reminder.yml/dispatches`, {
+    method: 'POST',
+    headers: {
+      Authorization: `token ${GH.token}`,
+      Accept: 'application/vnd.github.v3+json',
+      'Content-Type': 'application/json'
+    },
+    body: JSON.stringify({ ref: 'main' })
+  });
+  if (!res.ok) throw new Error(`GitHub ${res.status}: ${res.statusText}`);
+}
+
+// ── CONNECT ────────────────────────────────────────────────────────────────
+
+async function connect(silent = false) {
+  GH.user  = document.getElementById('ghUser').value.trim();
+  GH.repo  = document.getElementById('ghRepo').value.trim();
+  GH.token = document.getElementById('ghToken').value.trim();
+
+  if (!GH.user || !GH.repo || !GH.token) {
+    showToast('⚠️ Fill in all three fields first');
+    return;
+  }
+
+  localStorage.setItem('gh_user', GH.user);
+  localStorage.setItem('gh_repo', GH.repo);
+  localStorage.setItem('gh_token', GH.token);
+
+  log('info', `Connecting to ${GH.user}/${GH.repo}...`);
+
+  try {
+    // Try to load config.json
+    let data;
+    try {
+      data = await ghGet('config.json');
+      config = JSON.parse(atob(data.content.replace(/\n/g,'')));
+      configSha = data.sha;
+      log('success', `Loaded config.json — Day ${config.current_day}, ${config.paused ? 'PAUSED' : 'ACTIVE'}`);
+    } catch(e) {
+      // config.json doesn't exist yet — create default
+      config = {
+        current_day: 1,
+        start_date: new Date().toISOString().split('T')[0],
+        paused: false,
+        reminder_time_ist: "07:00",
+        streak: 0
+      };
+      const res = await fetch(`https://api.github.com/repos/${GH.user}/${GH.repo}/contents/config.json`, {
+        method: 'PUT',
+        headers: {
+          Authorization: `token ${GH.token}`,
+          Accept: 'application/vnd.github.v3+json',
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          message: 'Initialize config.json',
+          content: btoa(unescape(encodeURIComponent(JSON.stringify(config, null, 2))))
+        })
+      });
+      const created = await res.json();
+      configSha = created.content.sha;
+      log('success', 'Created config.json with default settings');
+    }
+
+    document.getElementById('setupBanner').classList.remove('show');
+    document.getElementById('connectedStatus').classList.add('show');
+    document.getElementById('connectedRepo').textContent = `${GH.user}/${GH.repo}`;
+    document.getElementById('controlsCard').classList.remove('locked');
+
+    updateUI();
+    if (!silent) showToast('✅ Connected successfully!');
+
+  } catch(err) {
+    log('error', `Connection failed: ${err.message}`);
+    showToast('❌ Connection failed — check your token & repo name');
+  }
+}
+
+// ── UPDATE UI ──────────────────────────────────────────────────────────────
+
+function updateUI() {
+  if (!config) return;
+
+  const day  = config.current_day;
+  const week = Math.ceil(day / 7);
+  const pct  = Math.round((day / 87) * 100);
+
+  document.getElementById('statDay').textContent = day;
+  document.getElementById('statWeek').textContent = `Week ${week}: ${WEEK_TOPICS[week] || ''}`;
+  document.getElementById('statRemaining').textContent = 87 - day;
+  document.getElementById('statStatus').textContent = config.paused ? 'PAUSED' : 'ACTIVE';
+  document.getElementById('statStatusSub').textContent = config.paused ? 'No emails sending' : 'Emails sending daily';
+  document.getElementById('statTime').textContent = config.reminder_time_ist || '07:00';
+  document.getElementById('progPct').textContent = pct + '%';
+  document.getElementById('progFill').style.width = pct + '%';
+
+  document.getElementById('dayInput').value = day;
+  document.getElementById('timeInput').value = config.reminder_time_ist || '07:00';
+
+  const pauseBtn = document.getElementById('pauseBtn');
+  const pauseSub = document.getElementById('pauseSubtext');
+  if (config.paused) {
+    pauseBtn.textContent = '▶ Resume';
+    pauseBtn.className = 'btn btn-green';
+    pauseSub.textContent = 'Emails are currently PAUSED';
+  } else {
+    pauseBtn.textContent = '⏸ Pause';
+    pauseBtn.className = 'btn btn-red';
+    pauseSub.textContent = 'Emails are currently active';
+  }
+}
+
+// ── SAVE CONFIG ─────────────────────────────────────────────────────────────
+
+async function saveConfig(message) {
+  try {
+    const res = await fetch(`https://api.github.com/repos/${GH.user}/${GH.repo}/contents/config.json`, {
+      method: 'PUT',
+      headers: {
+        Authorization: `token ${GH.token}`,
+        Accept: 'application/vnd.github.v3+json',
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({
+        message,
+        content: btoa(unescape(encodeURIComponent(JSON.stringify(config, null, 2)))),
+        sha: configSha
+      })
+    });
+    if (!res.ok) throw new Error(`GitHub ${res.status}`);
+    const data = await res.json();
+    configSha = data.content.sha;
+    return true;
+  } catch(err) {
+    log('error', `Save failed: ${err.message}`);
+    showToast('❌ Failed to save — try reconnecting');
+    return false;
+  }
+}
+
+// ── CONTROLS ───────────────────────────────────────────────────────────────
+
+async function togglePause() {
+  if (!config) return;
+  config.paused = !config.paused;
+  const msg = config.paused ? 'Pause emails' : 'Resume emails';
+  const ok = await saveConfig(msg);
+  if (ok) {
+    updateUI();
+    log(config.paused ? 'error' : 'success', config.paused ? '⏸ Emails paused' : '▶ Emails resumed');
+    showToast(config.paused ? '⏸ Emails paused — enjoy your break!' : '▶ Emails resumed — back on track!');
+  }
+}
+
+function stepDay(delta) {
+  const input = document.getElementById('dayInput');
+  let val = parseInt(input.value) || 1;
+  val = Math.max(1, Math.min(87, val + delta));
+  input.value = val;
+}
+
+async function saveDay() {
+  if (!config) return;
+  const newDay = parseInt(document.getElementById('dayInput').value);
+  if (isNaN(newDay) || newDay < 1 || newDay > 87) {
+    showToast('⚠️ Day must be between 1 and 87');
+    return;
+  }
+  config.current_day = newDay;
+  const ok = await saveConfig(`Set current day to ${newDay}`);
+  if (ok) {
+    updateUI();
+    log('success', `Day set to ${newDay} — next email will be for Day ${newDay}`);
+    showToast(`✅ Day updated to ${newDay}!`);
+  }
+}
+
+async function saveTime() {
+  if (!config) return;
+  const newTime = document.getElementById('timeInput').value;
+  if (!newTime) return;
+
+  // Convert IST to UTC for cron (IST = UTC+5:30)
+  const [h, m] = newTime.split(':').map(Number);
+  let utcH = h - 5;
+  let utcM = m - 30;
+  if (utcM < 0) { utcM += 60; utcH -= 1; }
+  if (utcH < 0) { utcH += 24; }
+  const cronExpr = `${utcM} ${utcH} * * *`;
+
+  config.reminder_time_ist = newTime;
+  config.cron_utc = cronExpr;
+
+  const ok = await saveConfig(`Set reminder time to ${newTime} IST`);
+  if (ok) {
+    updateUI();
+    log('info', `Reminder time set to ${newTime} IST (cron: ${cronExpr} UTC)`);
+    showToast(`⏰ Time set to ${newTime} IST — update your workflow cron too!`);
+  }
+}
+
+async function triggerNow() {
+  if (!config) return;
+  log('info', 'Triggering workflow manually...');
+  showToast('⏳ Sending email now...');
+  try {
+    await ghDispatch();
+    log('success', 'Workflow triggered! Check your inbox in ~1 minute');
+    showToast('📬 Email on its way! Check inbox in 1 min');
+  } catch(err) {
+    log('error', `Trigger failed: ${err.message}`);
+    showToast('❌ Trigger failed — make sure workflow_dispatch is enabled');
+  }
+}
+
+// ── LOG & TOAST ─────────────────────────────────────────────────────────────
+
+function log(type, msg) {
+  const el = document.getElementById('logEntries');
+  const now = new Date().toLocaleTimeString('en-IN', {hour:'2-digit',minute:'2-digit',second:'2-digit'});
+  const entry = document.createElement('div');
+  entry.className = `log-entry ${type}`;
+  entry.innerHTML = `<span class="log-time">${now}</span>${msg}`;
+  el.prepend(entry);
+  while (el.children.length > 20) el.removeChild(el.lastChild);
+}
+
+let toastTimer;
+function showToast(msg) {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => t.classList.remove('show'), 3000);
+}
+</script>
+</body>
+</html>
