@@ -19,4 +19,4 @@ jobs:
       - name: Run reminder script
         env:
           GMAIL_APP_PASSWORD: ${{ secrets.GMAIL_APP_PASSWORD }}
-        run: python faang_reminder_v2.py
+        run: python faang_reminder.py
